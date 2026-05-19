@@ -4,18 +4,18 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { ArrowLeft, ArrowRight, Flame, History, LayoutGrid, Mic, Play, RotateCcw, StopCircle, Trash2, ChevronRight, LogOut, Timer, Brain, Sparkles, Calendar, MessageSquare, Wand2, FastForward, CheckCircle2, Command, Settings, User, Users, Hash, Book, Camera } from "lucide-react";
+import { ArrowLeft, ArrowRight, Flame, History, LayoutGrid, Mic, Play, RotateCcw, StopCircle, Trash2, ChevronRight, LogOut, Timer, Brain, Sparkles, Calendar, MessageSquare, Wand2, FastForward, CheckCircle2, Command, Settings, User, Hash, Book, Camera } from "lucide-react";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import { useAuth } from "@/components/auth-provider";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, increment } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, increment } from "firebase/firestore";
 import { SignOutModal } from "@/components/sign-out-modal";
 import { SettingsModal } from "@/components/settings-modal";
 import { DailyDictionary } from "@/components/DailyDictionary";
-import { GuidedTour } from "@/components/GuidedTour";
+
 
 export default function DashboardClient() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function DashboardClient() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [userName, setUserName] = useState("");
-  const [tourCompleted, setTourCompleted] = useState(true);
+
   const [view, setView] = useState<"history" | "practice" | "dictionary">("history");
   const [sessions, setSessions] = useState<any[]>([]);
   const [assistMode, setAssistMode] = useState(false);
@@ -39,7 +39,7 @@ export default function DashboardClient() {
   const [rapidFireStep, setRapidFireStep] = useState(0);
   const [rapidFireAnswers, setRapidFireAnswers] = useState<{ q: string, a: string }[]>([]);
   const [showMicPopup, setShowMicPopup] = useState(false);
-  const [showFullscreenPopup, setShowFullscreenPopup] = useState(false);
+
   const searchParams = useSearchParams();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -65,26 +65,24 @@ export default function DashboardClient() {
     }
   }, [view]);
 
-  useEffect(() => {
-    const isFullscreenSupported = document.fullscreenEnabled;
-    const isFullscreen = document.fullscreenElement !== null;
 
-    console.log("Fullscreen Check:", { isFullscreenSupported, isFullscreen });
-
-    if (isFullscreenSupported && !isFullscreen) {
-      const timer = setTimeout(() => {
-        console.log("Setting showFullscreenPopup to true");
-        setShowFullscreenPopup(true);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const fetchNewQuestion = async (force = false) => {
     if (isFetchingQuestion && !force) return;
     setIsFetchingQuestion(true);
     try {
-      const history = JSON.parse(sessionStorage.getItem("question_history") || "[]");
+      let currentAnswered: string[] = [];
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+        if (userDocSnapshot.exists()) {
+          currentAnswered = userDocSnapshot.data().answeredQuestions || [];
+        }
+      }
+
+      const sessionHistory = JSON.parse(sessionStorage.getItem("question_history") || "[]");
+      const history = Array.from(new Set([...sessionHistory, ...currentAnswered]));
+
       const response = await fetch("/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,7 +91,7 @@ export default function DashboardClient() {
       const data = await response.json();
       setPrompt(data.question);
 
-      const newHistory = [data.question, ...history].slice(0, 5);
+      const newHistory = [data.question, ...sessionHistory].slice(0, 10);
       sessionStorage.setItem("question_history", JSON.stringify(newHistory));
     } catch (err) {
       console.error("Failed to fetch question:", err);
@@ -151,27 +149,66 @@ export default function DashboardClient() {
         setUserName(data.name || "");
         setNewUserName(data.name || "");
 
-        // --- STREAK LOGIC ---
+        // --- STREAK LOGIC & MASTERY SLIPPAGE ---
         const today = new Date();
         const todayStr = today.toISOString().split("T")[0]; // YYYY-MM-DD
         const lastDate = data.lastActivityDate || "";
 
         if (lastDate !== todayStr) {
-          const lastDateObj = lastDate ? new Date(lastDate) : null;
           const yesterday = new Date();
           yesterday.setDate(yesterday.getDate() - 1);
           const yesterdayStr = yesterday.toISOString().split("T")[0];
 
           if (lastDate && lastDate !== yesterdayStr && lastDate !== todayStr) {
             // Missed a day (lastActivity exists but is not yesterday or today)
-            if (data.streak !== 0) {
-              await setDoc(userDocRef, { streak: 0 }, { merge: true });
+            const lastExtDate = data.lastExtensionDate || "";
+            if (lastExtDate !== todayStr) {
+              let newEstDateStr = data.estimatedDate || "";
+              if (newEstDateStr) {
+                try {
+                  const lastActivityObj = new Date(lastDate);
+                  // Clean day difference calculation
+                  const d1 = new Date(todayStr);
+                  const d2 = new Date(lastDate);
+                  const diffTime = Math.abs(d1.getTime() - d2.getTime());
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                  
+                  if (diffDays > 1) {
+                    const currentEstDate = new Date(newEstDateStr);
+                    if (!isNaN(currentEstDate.getTime())) {
+                      // Push mastery date back by 2 days for every day missed
+                      const daysToExtend = (diffDays - 1) * 2;
+                      if (daysToExtend > 0) {
+                        currentEstDate.setDate(currentEstDate.getDate() + daysToExtend);
+                        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                        newEstDateStr = currentEstDate.toLocaleDateString('en-US', options);
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.error("Error updating estimatedDate on streak break:", e);
+                }
+              }
+
+              const updates: any = { 
+                streak: 0,
+                lastExtensionDate: todayStr
+              };
+              if (newEstDateStr && newEstDateStr !== data.estimatedDate) {
+                updates.estimatedDate = newEstDateStr;
+              }
+              await setDoc(userDocRef, updates, { merge: true });
+            } else {
+              // If already extended today, just make sure streak is reset to 0 in Firestore if not already
+              if (data.streak !== 0) {
+                await setDoc(userDocRef, { streak: 0 }, { merge: true });
+              }
             }
           }
         }
 
         setStreak(data.streak || 0);
-        setTourCompleted(data.tourCompleted || false);
+
 
         if (!data.onboarded) {
           router.push("/onboarding");
@@ -277,16 +314,7 @@ export default function DashboardClient() {
     startRecording();
   };
 
-  const handleFullscreen = async () => {
-    setShowFullscreenPopup(false);
-    try {
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch (err) {
-      console.error("Failed to enter fullscreen:", err);
-    }
-  };
+
 
   const handleFinish = async () => {
     if (isAnalyzing) return;
@@ -620,66 +648,53 @@ export default function DashboardClient() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.03)_0%,transparent_70%)] pointer-events-none"></div>
 
       <div className="max-w-4xl mx-auto relative z-10">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (startTimeoutRef.current) clearTimeout(startTimeoutRef.current);
-                if (isRecording) stopRecording();
-                clearTranscript();
-                if (view === "practice" || view === "dictionary") {
-                  setView("history");
-                  setIsRapidFire(false);
-                  setShowMicPopup(false);
-                  setRapidFireStep(0);
-                } else {
-                  router.push("/?stay=true");
-                }
-              }}
-              className="w-12 h-12 rounded-full bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center text-white hover:bg-emerald-600 transition-all hover:scale-105 shadow-md opacity-80 hover:opacity-100"
-              title="Menu"
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </button>
+        <div className="flex items-center justify-between mb-12 w-full">
+          <button
+            onClick={() => {
+              if (startTimeoutRef.current) clearTimeout(startTimeoutRef.current);
+              if (isRecording) stopRecording();
+              clearTranscript();
+              if (view === "practice" || view === "dictionary") {
+                setView("history");
+                setIsRapidFire(false);
+                setShowMicPopup(false);
+                setRapidFireStep(0);
+              } else {
+                router.push("/?stay=true");
+              }
+            }}
+            className="w-12 h-12 rounded-full bg-emerald-500 border-2 border-emerald-600 text-white hover:bg-emerald-600 transition-all hover:scale-110 active:scale-95 shadow-md shadow-emerald-500/20 flex items-center justify-center"
+            title="Menu"
+          >
+            <LayoutGrid className="w-5 h-5" />
+          </button>
 
-            {/* Friends Navigation */}
-            <Link
-              href="/friends"
-              className="w-12 h-12 rounded-full bg-purple-500 border-2 border-purple-600 flex items-center justify-center text-white hover:bg-purple-600 transition-all hover:scale-105 shadow-md opacity-80 hover:opacity-100"
-              title="Friends"
-            >
-              <MessageSquare className="w-5 h-5" />
-            </Link>
+          {/* Profile Navigation */}
+          <Link
+            id="profile-nav-btn"
+            href="/profile"
+            className="w-12 h-12 rounded-full bg-pink-500 border-2 border-pink-600 text-white hover:bg-pink-600 transition-all hover:scale-110 active:scale-95 shadow-md shadow-pink-500/20 flex items-center justify-center"
+            title="My Profile & Analytics"
+          >
+            <User className="w-5 h-5" />
+          </Link>
 
-            {/* Profile Navigation */}
-            <Link
-              id="profile-nav-btn"
-              href="/profile"
-              className="w-12 h-12 rounded-full bg-pink-500 border-2 border-pink-600 flex items-center justify-center text-white hover:bg-pink-600 transition-all hover:scale-105 shadow-md opacity-80 hover:opacity-100"
-              title="My Profile & Analytics"
-            >
-              <User className="w-5 h-5" />
-            </Link>
+          <ThemeToggle className="w-12 h-12 rounded-full bg-blue-500 border-2 border-blue-600 text-white hover:bg-blue-600 transition-all hover:scale-110 active:scale-95 shadow-md shadow-blue-500/20 flex items-center justify-center" />
+          
+          <button
+            onClick={() => {
+              if (isRecording) stopRecording();
+              setShowSettings(true);
+            }}
+            className="w-12 h-12 rounded-full bg-yellow-500 border-2 border-yellow-600 text-white hover:bg-yellow-600 transition-all hover:scale-110 active:scale-95 shadow-md shadow-yellow-500/20 flex items-center justify-center"
+            title="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
 
-
-            <ThemeToggle />
-            <button
-              onClick={() => {
-                if (isRecording) stopRecording();
-                setShowSettings(true);
-              }}
-              className="w-12 h-12 rounded-full bg-yellow-500 border-2 border-yellow-600 flex items-center justify-center text-white hover:bg-yellow-600 transition-all hover:scale-105 shadow-md opacity-80 hover:opacity-100"
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div id="streak-indicator" className="w-12 h-12 rounded-full bg-orange-500 border-2 border-orange-600 text-white flex items-center justify-center font-black shadow-md opacity-90 hover:opacity-100 transition-opacity gap-1">
-              <Flame className="w-4 h-4 fill-current flex-shrink-0" />
-              <span className="text-xs">{streak}</span>
-            </div>
+          <div id="streak-indicator" className="w-12 h-12 rounded-full bg-orange-500 border-2 border-orange-600 text-white flex items-center justify-center font-black shadow-md shadow-orange-500/20 transition-all gap-1 hover:scale-110">
+            <Flame className="w-4 h-4 fill-current flex-shrink-0" />
+            <span className="text-xs">{streak}</span>
           </div>
         </div>
 
@@ -818,34 +833,6 @@ export default function DashboardClient() {
                   </div>
                   <div className="relative z-10 mt-8 flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-500 text-white font-black uppercase tracking-widest text-[9px] shadow-lg shadow-emerald-500/30 hover:scale-105 transition-all">
                     VIEW PROFILE <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </Link>
-
-                {/* PEOPLE - DISCOVERY */}
-                <Link
-                  id="discover-people-card"
-                  href="/community"
-                  className="group relative flex flex-col items-start p-8 rounded-[2.5rem] bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 hover:border-yellow-500/50 transition-all duration-700 shadow-[0_20px_40px_rgba(0,0,0,0.2)] overflow-hidden translate-z-0"
-                >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(234,179,8,0.12)_0%,transparent_50%)] pointer-events-none" />
-                  <div className="absolute bottom-0 right-0 w-40 h-40 bg-yellow-500/10 rounded-full translate-x-1/4 translate-y-1/4 group-hover:scale-125 transition-transform duration-1000 pointer-events-none" />
-
-                  <div className="relative z-10 w-14 h-14 rounded-2xl bg-yellow-500 text-white flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-[0_0_30px_rgba(234,179,8,0.4)]">
-                    <Users className="w-7 h-7" />
-                  </div>
-
-                  <div className="relative z-10 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-[1.5px] bg-yellow-500 rounded-full" />
-                      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-yellow-500"></span>
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-black tracking-tighter italic text-foreground leading-[0.9] uppercase">DISCOVER <br /> PEOPLE</h3>
-                    <p className="text-sm md:text-base text-muted-foreground font-medium italic opacity-80 group-hover:opacity-100 transition-opacity">
-                      Find and <span className="text-yellow-500 font-bold">connect</span> with other rising voices.
-                    </p>
-                  </div>
-                  <div className="relative z-10 mt-8 flex items-center gap-2 px-6 py-2.5 rounded-full bg-yellow-500 text-white font-black uppercase tracking-widest text-[9px] shadow-lg shadow-yellow-500/30 hover:scale-105 transition-all">
-                    DISCOVER <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </Link>
 
@@ -1085,46 +1072,7 @@ export default function DashboardClient() {
           )}
         </>
       </div>
-      {showFullscreenPopup && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-              <Command className="w-8 h-8 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-black tracking-tighter italic text-white uppercase">App Experience</h2>
-              <p className="text-sm text-white/60 font-medium">
-                Go fullscreen for a more immersive, app-like practice experience.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  setShowFullscreenPopup(false);
-                }}
-                className="p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-colors"
-              >
-                Maybe Later
-              </button>
-              <button
-                onClick={handleFullscreen}
-                className="p-4 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-primary/20"
-              >
-                Go Fullscreen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {user && (
-        <GuidedTour 
-          tourCompleted={tourCompleted} 
-          onComplete={async () => {
-            await setDoc(doc(db, "users", user.uid), { tourCompleted: true }, { merge: true });
-          }} 
-        />
-      )}
     </div>
   );
 }

@@ -40,8 +40,9 @@ import { motion } from "framer-motion";
 
 import { useAuth } from "@/components/auth-provider";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { computeSessionAnalytics } from "@/lib/session-analytics";
+import { detectFillers, getTotalFillers, getFillerCategories } from "@/lib/filler-detector";
 
 interface FeedbackData {
   confidence_score: number;
@@ -215,6 +216,14 @@ export default function ResultsClient() {
             fillers: analytics.fillers,
             meta: analytics.meta,
           });
+
+          // Update user's answeredQuestions list in Firestore to avoid duplicate questions
+          const currentAnswered = userDoc.exists() ? (userDoc.data().answeredQuestions || []) : [];
+          if (prompt && !currentAnswered.includes(prompt) && prompt !== "Mirror Mode Session") {
+            await setDoc(userDocRef, {
+              answeredQuestions: [...currentAnswered, prompt]
+            }, { merge: true });
+          }
 
           const todayStr = new Date().toDateString();
           const lastDateStr = userDoc.exists() ? userDoc.data().lastDate : null;
@@ -412,9 +421,17 @@ export default function ResultsClient() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-10 border-t border-white/5">
                   <StatItem label="Style" value={data?.tone_analysis || "N/A"} icon={<User className="w-5 h-5" />} />
-                  <StatItem label="Extra Words" value={`${data?.filler_words_detected || 0}`} icon={<Sparkles className="w-5 h-5" />} />
+                  <StatItem
+                    label="Filler Words"
+                    value={(() => {
+                      const t = typeof window !== 'undefined' ? sessionStorage.getItem("last_transcript") || "" : "";
+                      return getTotalFillers(detectFillers(t)).toString();
+                    })()}
+                    icon={<Sparkles className="w-5 h-5" />}
+                  />
                   <StatItem label="Speed" value={data?.pace_feedback || "Normal"} icon={<Gauge className="w-5 h-5" />} />
                 </div>
+
               </div>
             </div>
 
@@ -498,7 +515,78 @@ export default function ResultsClient() {
               </div>
             )}
 
+            {/* FILLER WORD BREAKDOWN */}
+            {(() => {
+              const t = typeof window !== 'undefined' ? sessionStorage.getItem("last_transcript") || "" : "";
+              const fillers = detectFillers(t);
+              const total = getTotalFillers(fillers);
+              const cats = getFillerCategories(fillers);
+              if (total === 0) return null;
+              return (
+                <div className="relative group">
+                  <div className="relative glass-card rounded-[2.5rem] p-8 md:p-10 border border-orange-500/10 overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/5 rounded-full -mr-16 -mt-16 pointer-events-none" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-[1rem] bg-orange-500/10 flex items-center justify-center text-orange-500">
+                        <MessageSquare className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black tracking-tight italic">Filler Word Breakdown</h3>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500/70">{total} filler{total !== 1 ? "s" : ""} detected in this session</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {cats.hesitations.length > 0 && (
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-3">🔴 Hesitation Sounds</p>
+                          <div className="flex flex-wrap gap-2">
+                            {cats.hesitations.map(([word, count]) => (
+                              <span key={word} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-black">
+                                <span className="opacity-70">"{word}"</span>
+                                <span className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[10px] font-black">{count}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {cats.discourse.length > 0 && (
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-3">🟠 Discourse Fillers</p>
+                          <div className="flex flex-wrap gap-2">
+                            {cats.discourse.map(([word, count]) => (
+                              <span key={word} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-black">
+                                <span className="opacity-70">"{word}"</span>
+                                <span className="w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center text-[10px] font-black">{count}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {cats.hinglish.length > 0 && (
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-3">🟡 Hinglish Fillers</p>
+                          <div className="flex flex-wrap gap-2">
+                            {cats.hinglish.map(([word, count]) => (
+                              <span key={word} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-black">
+                                <span className="opacity-70">"{word}"</span>
+                                <span className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center text-[10px] font-black">{count}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground italic border-t border-border/50 pt-4">
+                        💡 Replace each filler with a <span className="text-foreground font-bold">confident 0.5s pause</span> — silence sounds far more authoritative than "uh" or "like".
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* REFINED VERSION */}
+
             <div 
               
               

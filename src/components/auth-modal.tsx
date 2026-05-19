@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+
 
 import { X, Mail, Lock, LogIn, ArrowRight } from "lucide-react";
 import { useAuth } from "./auth-provider";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { loginWithGoogle, loginWithEmail, signupWithEmail, resetPassword } = useAuth();
+  const { loginWithEmail, signupWithEmail, resetPassword } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,26 +53,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     }
   };
 
-  const handleGoogle = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      await loginWithGoogle();
-      onClose();
-      router.push("/dashboard");
-    } catch (err: any) {
-      console.error("AuthModal Google Error:", err);
-      if (err.code === "auth/operation-not-allowed") {
-        setError("Google login is not enabled in the Firebase Console.");
-      } else if (err.code === "auth/popup-closed-by-user") {
-        setError("Login popup was closed before completion.");
-      } else {
-        setError(err.message || "Failed to sign in with Google.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   if (!mounted) return null;
 
@@ -171,25 +152,6 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               </button>
             </form>
 
-            <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase tracking-[0.3em] font-black">
-                <span className="bg-background px-4 text-muted-foreground">OR</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={handleGoogle}
-                disabled={loading}
-                className="w-full py-4 rounded-full border border-border bg-background hover:bg-muted text-foreground font-black text-xs uppercase tracking-widest flex items-center justify-center gap-4 transition-all disabled:opacity-50"
-              >
-                <Image src="/google.png" alt="Google" width={24} height={24} className="mr-1" />
-                {isLogin ? "Sign in with Google" : "Sign up with Google"}
-              </button>
-            </div>
 
             <p className="mt-8 text-center text-sm text-muted-foreground font-medium">
               {isLogin ? "New to REVIAL?" : "Already have an account?"}{" "}

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Great_Vibes } from "next/font/google";
 import Link from "next/link";
+
+const greatVibes = Great_Vibes({ weight: "400", subsets: ["latin"] });
 import {
   LayoutGrid, User, Flame, Clock, TrendingUp, TrendingDown,
   Minus, Mic, Calendar, BarChart2, ChevronRight, Sparkles,
@@ -45,6 +48,15 @@ interface Session {
   feedback?: any;
 }
 
+const MOTIVATIONAL_QUOTES = [
+  "Your voice is your greatest asset. Train it, refine it, and let it lead you.",
+  "Confidence isn't the absence of fear, but the decision that something else is more important.",
+  "Great speakers are not born; they are trained. You are on the right path.",
+  "Speak with authority, listen with empathy, lead with clarity.",
+  "Every pause is an opportunity. Every session is progress. Keep speaking.",
+  "Clear speech represents a clear mind. You are building both every day."
+];
+
 export default function ProfileClient() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -53,6 +65,15 @@ export default function ProfileClient() {
   const [userName, setUserName] = useState("");
   const [joinDate, setJoinDate] = useState<string>("");
   const [estimatedDate, setEstimatedDate] = useState<string>("");
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [quote, setQuote] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFlipped(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -91,6 +112,8 @@ export default function ProfileClient() {
           const d = new Date(user.metadata.creationTime);
           setJoinDate(d.toLocaleDateString("en-IN", { month: "long", year: "numeric" }));
         }
+
+        setQuote(MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]);
 
         const data: Session[] = snap.docs.map((d) => ({
           id: d.id,
@@ -210,44 +233,114 @@ export default function ProfileClient() {
           <ThemeToggle />
         </div>
 
-        {/* ── User Hero Card (Using card.png) ── */}
-        <div className="relative rounded-[1.5rem] overflow-hidden shadow-2xl flex flex-col justify-between group hover:scale-[1.02] transition-all duration-500 w-full max-w-md mx-auto aspect-[1.58/1] text-white">
-          {/* Background Image */}
-          <div className="absolute inset-0 bg-[url('/card.png')] bg-cover bg-center" />
-          
-          {/* Center Logo (Watermark style) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img src="/splash.png" alt="Revial Logo" className="w-16 h-16 md:w-20 md:h-20 opacity-30 object-contain" />
-          </div>
-          
-          {/* Overlay to ensure readability if needed */}
-          <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-all duration-500" />
-
-          {/* Content Overlay */}
-          <div className="relative z-10 p-6 md:p-8 h-full flex flex-col justify-between flex-1">
-            {/* Top Section */}
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[9px] font-medium uppercase tracking-[0.3em] text-white/50 drop-shadow-sm mb-0.5">Card Holder</p>
-                <h3 className="text-lg md:text-xl font-bold tracking-wider text-white uppercase drop-shadow-md">
-                  {userName || user?.displayName || "Speaker"}
-                </h3>
-              </div>
-              <div />
-            </div>
-
-            {/* Bottom Section: Estimation */}
-            <div className="flex justify-between items-end mt-auto mb-2 md:mb-4">
-              <div />
+        {/* ── User Hero Card (Using card.png with 3D Flip) ── */}
+        <div 
+          onClick={() => setIsFlipped(!isFlipped)}
+          className="w-full max-w-md mx-auto aspect-[1.58/1] select-none"
+          style={{ perspective: "1000px", cursor: "pointer" }}
+        >
+          <div
+            className="relative w-full h-full rounded-[1.5rem] shadow-2xl transition-all duration-700 ease-out"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+              transition: "transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+            }}
+          >
+            {/* FRONT SIDE */}
+            <div
+              className="absolute inset-0 rounded-[1.5rem] overflow-hidden flex flex-col justify-between text-white"
+              style={{
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transform: "rotateY(0deg)"
+              }}
+            >
+              {/* Background Image */}
+              <div className="absolute inset-0 bg-[url('/card.png')] bg-cover bg-center" />
               
-              <div className="text-right">
-                <p className="text-[9px] font-medium uppercase tracking-[0.3em] text-white/50 drop-shadow-sm mb-0.5">Mastery Date</p>
-                <div className="flex items-center justify-end gap-1 text-white font-bold drop-shadow-md">
-                  <Sparkles className="w-3 h-3 text-yellow-300" />
-                  <span className="text-xs md:text-sm">{estimatedDate || "July 10, 2026"}</span>
+              {/* Center Logo (Watermark style) */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <img src="/splash.png" alt="Revial Logo" className="w-16 h-16 md:w-20 md:h-20 opacity-30 object-contain" />
+              </div>
+              
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/5" />
+
+              {/* Content Overlay */}
+              <div className="relative z-10 p-6 md:p-8 h-full flex flex-col justify-between flex-1">
+                {/* Top Section */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-[9px] font-medium uppercase tracking-[0.3em] text-white/50 drop-shadow-sm mb-0.5">Card Holder</p>
+                    <h3 className={`${greatVibes.className} text-3xl md:text-4xl font-normal bg-gradient-to-r from-[#F9D976] via-[#E9B646] to-[#C18E28] bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]`}>
+                      {userName || user?.displayName || "Speaker"}
+                    </h3>
+                  </div>
+                  <div />
+                </div>
+
+                {/* Bottom Section: Estimation */}
+                <div className="flex justify-between items-end mt-auto mb-2 md:mb-4">
+                  <div />
+                  
+                  <div className="text-right">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.3em] text-white/50 drop-shadow-sm mb-0.5">Mastery Date</p>
+                    <div className="flex items-center justify-end gap-1 text-white font-bold drop-shadow-md">
+                      <Sparkles className="w-3 h-3 text-yellow-300" />
+                      <span className="text-xs md:text-sm">{estimatedDate || "July 10, 2026"}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* BACK SIDE (PREMIUM GOLD) */}
+            <div
+              className="absolute inset-0 rounded-[1.5rem] overflow-hidden flex flex-col justify-between p-6 md:p-8 border text-zinc-950 shadow-2xl"
+              style={{
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+                background: "linear-gradient(135deg, #F9D976 0%, #E9B646 40%, #C18E28 75%, #976912 100%)",
+                border: "1.5px solid rgba(255, 223, 128, 0.6)",
+                boxShadow: "0 25px 50px -12px rgba(233, 182, 70, 0.25)"
+              }}
+            >
+              {/* Premium metallic sheen overlay */}
+              <div 
+                className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
+                style={{
+                  background: "linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.6) 50%, transparent 55%)",
+                  backgroundSize: "200% 200%",
+                }} 
+              />
+              
+              {/* Faint watermark Logo */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.07]">
+                <img src="/splash.png" alt="Revial Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain invert" />
+              </div>
+
+              {/* Back side branding */}
+              <div className="flex justify-between items-center z-10 border-b border-zinc-950/15 pb-3">
+                <span className="text-[9px] font-black tracking-[0.35em] text-zinc-950 uppercase">REVIAL ELITE MASTERY</span>
+                <Sparkles className="w-3.5 h-3.5 text-zinc-950 animate-pulse" />
+              </div>
+
+              {/* Motivational Quote Content */}
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-2 z-10 my-auto">
+                <p className="text-sm md:text-[15px] font-extrabold leading-relaxed italic text-zinc-950 drop-shadow-sm">
+                  "{quote || "Your voice is your greatest asset. Train it, refine it, and let it lead you."}"
+                </p>
+              </div>
+
+              {/* Back side bottom tag */}
+              <div className="flex justify-between items-end z-10 mt-auto pt-3 border-t border-zinc-950/15 text-[8px] font-mono tracking-widest text-zinc-800">
+                <span>VIP SPEAKER CARD</span>
+                <span className="text-zinc-950 font-black">CLICK TO FLIP BACK</span>
+              </div>
+            </div>
+
           </div>
         </div>
 

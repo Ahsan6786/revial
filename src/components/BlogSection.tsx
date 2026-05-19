@@ -2,10 +2,8 @@
 
 import React from "react";
 import Image from "next/image";
-import { ArrowUpRight, Clock, BookOpen } from "lucide-react";
+import { Clock } from "lucide-react";
 import { motion } from "framer-motion";
-
-import Link from "next/link";
 
 interface BlogCardProps {
   imageSrc: string;
@@ -40,11 +38,10 @@ const BlogCard = ({
   };
 
   return (
-    <Link href={`/blog/${index}`} className="block h-full cursor-pointer">
-      <motion.div
-        variants={cardVariants}
-        className="group relative flex flex-col justify-between h-full overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950/40 p-6 shadow-2xl backdrop-blur-xl"
-      >
+    <motion.div
+      variants={cardVariants}
+      className="group relative flex flex-col justify-between h-full overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950/40 p-6 shadow-2xl backdrop-blur-xl"
+    >
       <div>
         {/* Image Container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
@@ -55,6 +52,7 @@ const BlogCard = ({
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
             className="object-cover"
             priority={index === 0}
+            unoptimized
           />
           {/* Dark Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
@@ -93,27 +91,14 @@ const BlogCard = ({
           </p>
         </div>
       </div>
-
-      {/* Footer / CTA inside card */}
-      <div className="mt-8 border-t border-white/5 pt-4">
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-zinc-500">
-          <span className="flex items-center gap-1.5">
-            <BookOpen size={14} /> Read Full Article
-          </span>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50">
-            <ArrowUpRight size={14} />
-          </div>
-        </div>
-      </div>
     </motion.div>
-  </Link>
-);
+  );
 };
 
 export default function BlogSection() {
   const blogs = [
     {
-      imageSrc: "/s1.png",
+      imageSrc: "/s1.webp",
       overlayText: "Speak With Confidence",
       category: "Speaking Skills",
       title: "Why Great Talent Still Fails Interviews",
@@ -122,7 +107,7 @@ export default function BlogSection() {
       readTime: "4 min read",
     },
     {
-      imageSrc: "/s2.png",
+      imageSrc: "/s2.webp",
       overlayText: "Communication Is Power",
       category: "Career Growth",
       title: "How Poor Speaking Skills Hold People Back",
@@ -131,7 +116,7 @@ export default function BlogSection() {
       readTime: "5 min read",
     },
     {
-      imageSrc: "/s3.png",
+      imageSrc: "/s3.webp",
       overlayText: "Your Voice Matters",
       category: "Self Improvement",
       title: "The Real Difference Between Selection And Rejection",

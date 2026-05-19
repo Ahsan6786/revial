@@ -168,10 +168,14 @@ export function Onboarding({ user, onComplete }: OnboardingProps) {
   return (
     <div className={cn("fixed inset-0 z-[200] flex items-center justify-center overflow-hidden transition-colors duration-1000", step.bgColor)}>
       <div className="relative w-full max-w-4xl px-8">
-        <>
-          <div
+        <AnimatePresence mode="wait">
+          <motion.div
             key={currentStep}
-            className="flex flex-col items-center text-center"
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.98 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center text-center w-full"
           >
             {step.isQuestions ? (
               <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
@@ -179,10 +183,10 @@ export function Onboarding({ user, onComplete }: OnboardingProps) {
                   {currentQuestion < QUESTIONS.length ? (
                     <motion.div
                       key={currentQuestion}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
+                      initial={{ opacity: 0, x: 40, scale: 0.99 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -40, scale: 0.99 }}
+                      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                       className="w-full flex flex-col items-center"
                     >
                       <span className="text-yellow-500 font-black text-xs uppercase tracking-[0.3em] mb-4">
@@ -195,25 +199,28 @@ export function Onboarding({ user, onComplete }: OnboardingProps) {
 
                       <div className="grid grid-cols-1 gap-4 w-full mb-12">
                         {QUESTIONS[currentQuestion].options.map((option, index) => (
-                          <button
+                          <motion.button
                             key={index}
                             onClick={() => handleAnswer(option)}
+                            whileHover={{ scale: 1.015 }}
+                            whileTap={{ scale: 0.985 }}
                             className={cn(
-                              "w-full text-left p-5 rounded-2xl border transition-all text-lg font-bold",
+                              "w-full text-left p-5 rounded-2xl border transition-all text-lg font-bold outline-none",
                               answers[currentQuestion] === option
-                                ? "bg-white text-black border-white"
+                                ? "bg-white text-black border-white shadow-[0_10px_35px_rgba(255,255,255,0.15)]"
                                 : "bg-white/5 text-white border-white/10 hover:bg-white/10"
                             )}
                           >
                             {option}
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </motion.div>
                   ) : (
                     <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                       className="text-center bg-gradient-to-br from-yellow-500/10 to-transparent p-8 rounded-[2.5rem] border border-yellow-500/20 w-full shadow-[0_0_50px_rgba(234,179,8,0.1)]"
                     >
                       <Sparkles className="w-8 h-8 text-yellow-500 mx-auto mb-4 animate-pulse" />
@@ -228,18 +235,20 @@ export function Onboarding({ user, onComplete }: OnboardingProps) {
                   )}
                 </AnimatePresence>
 
-                <button
+                <motion.button
                   onClick={handleNext}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   disabled={isFinishing || !estimatedDate || answers.length < QUESTIONS.length}
-                  className="group flex items-center gap-4 bg-white text-black px-10 py-5 rounded-[2rem] font-black text-xl hover:scale-105 transition-transform disabled:opacity-50 shadow-2xl shadow-black/10 mt-8"
+                  className="group flex items-center gap-4 bg-white text-black px-10 py-5 rounded-[2rem] font-black text-xl disabled:opacity-50 shadow-2xl shadow-black/10 mt-8"
                 >
                   CONTINUE
                   <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </motion.button>
               </div>
             ) : (
               <>
-                <div className="w-20 h-20 rounded-3xl flex items-center justify-center bg-white/20  text-white shadow-2xl mb-12">
+                <div className="w-20 h-20 rounded-3xl flex items-center justify-center bg-white/20  text-white shadow-2xl mb-12 animate-pulse">
                   {step.icon}
                 </div>
 
@@ -264,18 +273,20 @@ export function Onboarding({ user, onComplete }: OnboardingProps) {
                   </div>
                 )}
 
-                <button
+                <motion.button
                   onClick={handleNext}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   disabled={isFinishing || (step.id === "name" && !name.trim())}
-                  className="group flex items-center gap-4 bg-white text-black px-10 py-5 rounded-[2rem] font-black text-xl hover:scale-105 transition-transform disabled:opacity-50 shadow-2xl shadow-black/10"
+                  className="group flex items-center gap-4 bg-white text-black px-10 py-5 rounded-[2rem] font-black text-xl disabled:opacity-50 shadow-2xl shadow-black/10"
                 >
                   {currentStep === STEPS.length - 1 ? "START NOW" : "NEXT"}
                   <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </motion.button>
               </>
             )}
-          </div>
-        </>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Progress Indicator */}

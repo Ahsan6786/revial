@@ -65,7 +65,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithEmail = async (email: string, pass: string) => {
-    await signInWithEmailAndPassword(auth, email, pass);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (loginError: any) {
+      try {
+        // Attempt automatic sign up if the sign in failed
+        await createUserWithEmailAndPassword(auth, email, pass);
+      } catch (signupError: any) {
+        // If sign up fails because the email is already registered,
+        // it means they entered the wrong password for an existing account.
+        if (signupError.code === "auth/email-already-in-use") {
+          throw loginError;
+        }
+        throw signupError;
+      }
+    }
   };
 
   const signupWithEmail = async (email: string, pass: string) => {

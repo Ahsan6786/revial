@@ -135,15 +135,31 @@ export default function MirrorClient() {
       setRealTimeFillers(fillers);
       
       // Neuro Engine: Detect HABITS, not just words
-      const words = transcript.trim().split(" ");
+      // Check the last 1-3 words to catch multi-word fillers too
+      const words = transcript.trim().split(/\s+/);
       const lastWord = words[words.length - 1]?.toLowerCase();
-      
-      // Only alert if this specific filler has been used more than 2 times
-      if (lastWord && ["umm", "uh", "like", "basically", "matlab", "you know"].includes(lastWord)) {
-        if (fillers[lastWord] > 2) {
-          setLastFiller(lastWord);
-          setTimeout(() => setLastFiller(null), 3000);
-        }
+      const lastTwo = words.slice(-2).join(" ").toLowerCase();
+      const lastThree = words.slice(-3).join(" ").toLowerCase();
+
+      // Full filler vocab — pure hesitations + common discourse fillers
+      const ALERT_FILLERS = [
+        "umm", "um", "uh", "er", "ah", "hmm",
+        "like", "basically", "actually", "literally",
+        "right", "okay", "so", "well",
+        "you know", "i mean", "i guess",
+        "kind of", "sort of",
+        "matlab", "matlab ki", "matlab bolo",
+        "woh", "yaar", "toh",
+      ];
+
+      const match =
+        ALERT_FILLERS.find(f => f === lastThree && fillers[f] > 1) ||
+        ALERT_FILLERS.find(f => f === lastTwo   && fillers[f] > 1) ||
+        ALERT_FILLERS.find(f => f === lastWord  && fillers[f] > 2);
+
+      if (match) {
+        setLastFiller(match);
+        setTimeout(() => setLastFiller(null), 3000);
       }
     }
   }, [isRecording, transcript]);

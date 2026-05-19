@@ -274,19 +274,19 @@ function HomeContent() {
               icon: <Activity className="text-zinc-400 w-5 h-5" />, 
               title: "AI Voice Auditing",
               desc: "Get instant neural feedback on your clarity, tone, and presence.",
-              imageSrc: "/s1.png"
+              imageSrc: "/s1.webp"
             },
             { 
               icon: <Flame className="text-zinc-400 w-5 h-5" />, 
               title: "Rapid Fire Drills",
               desc: "Intense, quick exercises to eliminate hesitation and speak with ease.",
-              imageSrc: "/s2.png"
+              imageSrc: "/s2.webp"
             },
             { 
               icon: <Wand2 className="text-zinc-400 w-5 h-5" />, 
               title: "Smart Guidance & Scripting",
               desc: "Follow advanced AI scripts and prompts tailored to your audience.",
-              imageSrc: "/s3.png"
+              imageSrc: "/s3.webp"
             }
           ].map((item, i) => (
             <div 
@@ -302,6 +302,7 @@ function HomeContent() {
                     fill
                     sizes="(max-width: 768px) 100vw, 400px"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    unoptimized
                   />
                   {/* High-Contrast Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent z-10" />
@@ -321,9 +322,8 @@ function HomeContent() {
         </div>
       </section>
 
-
       {/* --- SHOWCASE: REAL-TIME FEEDBACK --- */}
-      <section className="py-32 px-6 bg-[#080808]">
+      <section id="vocal-audit-section" className="py-32 px-6 bg-[#080808]">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-center">
           <div className="lg:w-1/2">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-8 uppercase italic leading-tight">
@@ -353,26 +353,35 @@ function HomeContent() {
             </div>
           </div>
 
-          <div className="lg:w-1/2 relative">
-            <div className="w-full aspect-video bg-zinc-900 border border-white/10 rounded-[2.5rem] p-4 relative overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.05)]">
-              <div className="absolute inset-0 bg-black opacity-20 pointer-events-none z-10" />
+          <div className="lg:w-1/2 relative group/wave">
+            {/* Cinematic background glow behind the card */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-violet-500/20 via-pink-500/20 to-amber-500/20 rounded-[2.7rem] blur-2xl opacity-40 group-hover/wave:opacity-80 transition duration-1000" />
+            <div className="relative w-full aspect-video bg-black/90 border border-white/10 rounded-[2.5rem] p-4 overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/40 opacity-20 pointer-events-none z-10" />
               
               <div className="absolute inset-0 flex items-center justify-center gap-1.5 px-10">
-                {mounted && [...Array(50)].map((_, i) => (
-                  <div 
-                    key={i}
-                    className="w-[3px] md:w-[4px] bg-gradient-to-t from-zinc-700 via-zinc-300 to-zinc-700 rounded-full animate-voice-flow"
-                    style={{ 
-                      height: `${Math.random() * 70 + 10}%`,
-                      animationDelay: `${i * 0.04}s`,
-                      boxShadow: '0 0 10px rgba(255, 255, 255, 0.05)'
-                    }}
-                  />
-                ))}
+                {mounted && [...Array(50)].map((_, i) => {
+                  // Generate a dynamic, premium colorful gradient across the wave
+                  const hueStart = (i * 360) / 50;
+                  const hueEnd = (hueStart + 60) % 360;
+                  return (
+                    <div 
+                      key={i}
+                      className="w-[3px] md:w-[4px] rounded-full animate-voice-flow transition-all duration-300 group-hover/wave:scale-y-110"
+                      style={{ 
+                        height: `${20 + Math.sin(i * 0.35) * 30 + Math.random() * 25}%`,
+                        animationDelay: `${i * 0.03}s`,
+                        animationDuration: `${0.6 + (i % 7) * 0.12}s`,
+                        background: `linear-gradient(to top, hsl(${hueStart}, 95%, 50%), hsl(${hueEnd}, 100%, 65%))`,
+                        boxShadow: `0 0 12px hsla(${hueStart}, 95%, 50%, 0.5)`
+                      }}
+                    />
+                  );
+                })}
               </div>
               
               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-20">
-                <button className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 hover:bg-zinc-100 transition-transform shadow-2xl cursor-pointer">
+                <button className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 hover:bg-zinc-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.25)] hover:shadow-[0_0_40px_rgba(236,72,153,0.4)] cursor-pointer">
                   <Play fill="black" size={24} className="ml-1" />
                 </button>
               </div>
@@ -385,42 +394,45 @@ function HomeContent() {
       <BlogSection />
 
       {/* --- FOOTER: THE SIGNATURE --- */}
-      <footer className="relative pt-40 pb-20 px-6 border-t border-white/5 overflow-hidden bg-black">
+      <footer className="relative pt-40 pb-20 px-6 overflow-hidden bg-black">
+        {/* Subtle top border gradient separator */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        
         {/* Layered Cinematic Bottom Glow (x.ai/api inspired smooth, highly diffused upward atmospheric light) */}
-        {/* Layer 1: Giant Broad Amber Ambient Base */}
+        {/* Layer 1: Broad Deep Indigo/Violet Base Ambient */}
         <div 
           className="absolute inset-0 pointer-events-none z-0" 
           style={{
-            background: "radial-gradient(circle at 50% 100%, rgba(210, 150, 75, 0.08) 0%, rgba(120, 80, 30, 0.02) 60%, transparent 100%)"
+            background: "radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 100%)"
           }}
         />
-        {/* Layer 2: Medium Golden Soft Diffused Glow */}
+        {/* Layer 2: Medium Warm Gold/Orange Diffused Glow */}
         <div 
           className="absolute inset-0 pointer-events-none z-0" 
           style={{
-            background: "radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.04) 0%, rgba(210, 150, 75, 0.01) 70%, transparent 100%)"
+            background: "radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08) 0%, rgba(236, 72, 153, 0.02) 60%, transparent 100%)"
           }}
         />
-        {/* Layer 3: Warm Elliptical Mid-Flare */}
+        {/* Layer 3: Vibrant Crimson/Rose Mid-Flare */}
         <div 
           className="absolute inset-0 pointer-events-none z-0" 
           style={{
-            background: "radial-gradient(ellipse 80% 70% at 50% 100%, rgba(255, 235, 180, 0.06) 0%, rgba(210, 150, 75, 0.02) 80%, transparent 100%)"
+            background: "radial-gradient(ellipse 80% 70% at 50% 100%, rgba(244, 63, 94, 0.08) 0%, rgba(139, 92, 246, 0.02) 80%, transparent 100%)"
           }}
         />
-        {/* Layer 4: Intense Bottom-Most Golden Light Spill */}
+        {/* Layer 4: Intense Bottom-Most Neon-Gold & Sunset Light Spill */}
         <div 
-          className="absolute bottom-0 left-0 right-0 h-[150px] pointer-events-none z-0" 
+          className="absolute bottom-0 left-0 right-0 h-[220px] pointer-events-none z-0" 
           style={{
-            background: "radial-gradient(ellipse 60% 100% at 50% 100%, rgba(255, 215, 0, 0.12) 0%, transparent 100%)"
+            background: "radial-gradient(ellipse 60% 100% at 50% 100%, rgba(245, 158, 11, 0.18) 0%, rgba(236, 72, 153, 0.06) 50%, transparent 100%)"
           }}
         />
-        {/* Layer 5: Fine bottom glowing horizontal borders */}
+        {/* Layer 5: Fine bottom glowing horizontal borders (Vibrant Multi-Stop Neon Gradient) */}
         <div 
-          className="absolute bottom-0 left-0 right-0 h-[2px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-[#ffd700]/40 to-transparent blur-[1px]"
+          className="absolute bottom-0 left-0 right-0 h-[2px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-violet-500/20 via-pink-500/40 via-amber-400/50 via-pink-500/40 via-violet-500/20 to-transparent blur-[1px]"
         />
         <div 
-          className="absolute bottom-0 left-0 right-0 h-[1px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-[#ffd700]/75 to-transparent"
+          className="absolute bottom-0 left-0 right-0 h-[1px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-violet-500/50 via-pink-500/80 via-amber-400/90 via-pink-500/80 via-violet-500/50 to-transparent"
         />
 
         <div className="relative z-10 max-w-7xl mx-auto">

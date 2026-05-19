@@ -6,7 +6,6 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { FriendRequestItem } from "@/components/FriendRequestItem";
 import { User, MessageSquare, ArrowLeft, Users, Clock } from "lucide-react";
-import Link from "next/link";
 import { getOrCreateChat } from "@/lib/social";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -153,8 +152,7 @@ export default function FriendsPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-center">
                   <Users className="w-12 h-12 text-white/10 mb-4" />
-                  <p className="text-muted-foreground font-medium italic">Your circle is empty. Go find some speakers!</p>
-                  <Link href="/community" className="mt-4 text-xs font-black uppercase tracking-widest text-primary hover:underline">Browse Community</Link>
+                  <p className="text-muted-foreground font-medium italic">Your circle is empty.</p>
                 </div>
               )}
             </div>

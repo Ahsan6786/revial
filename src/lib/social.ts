@@ -51,24 +51,6 @@ export interface Message {
   createdAt: any;
 }
 
-// User Discovery
-export const searchUsers = async (currentUserId: string, searchTerm: string = "") => {
-  const usersRef = collection(db, "users");
-  const q = query(usersRef, limit(50));
-  const snapshot = await getDocs(q);
-  
-  const users = snapshot.docs
-    .map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile))
-    .filter(user => user.uid !== currentUserId);
-
-  if (!searchTerm) return users;
-
-  const lowerSearch = searchTerm.toLowerCase();
-  return users.filter(user => 
-    user.name?.toLowerCase().includes(lowerSearch) || 
-    user.email?.toLowerCase().includes(lowerSearch)
-  );
-};
 
 // Friend Requests
 export const sendFriendRequest = async (senderId: string, receiverId: string) => {
