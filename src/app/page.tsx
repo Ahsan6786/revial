@@ -9,7 +9,7 @@ import {
   Zap, Globe, ChevronRight, Activity, Command,
   Cpu, Layers, Volume2, Fingerprint, BarChart3,
   Dna, Play, Pause, Sparkles, MoveRight, LayoutGrid,
-  Flame, Book, Wand2, FastForward
+  Flame, Book, Wand2, FastForward, ArrowUpRight, ArrowDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth-provider";
@@ -18,56 +18,10 @@ import { SignOutModal } from "@/components/sign-out-modal";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import BlogSection from "@/components/BlogSection";
 
 
-const MobileDemo = () => {
-  const images = [
-    "/i1.jpg", "/i2.jpg", "/i3.jpg", "/i4.jpg"
-  ];
-  
-  const [index, setIndex] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [images.length]);
-
-  return (
-    <div className="relative w-[300px] h-[600px] md:w-[350px] md:h-[700px] mx-auto">
-      {/* Phone Frame */}
-      <div className="absolute inset-0 bg-[#0A0A0A] rounded-[3rem] border-[8px] border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden z-20">
-        
-        {/* Dynamic Island Notch */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-40" />
-
-        {/* Screen Content Wrapper */}
-        <div className="absolute inset-0 bg-black z-30">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={index}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1, ease: "easeInOut" }}
-              className="absolute inset-0"
-            >
-              <Image 
-                src={images[index]} 
-                alt="App Interface" 
-                fill 
-                sizes="(max-width: 768px) 300px, 350px"
-                className="object-cover object-center" 
-                priority
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // --- MAIN COMPONENT ---
 function HomeContent() {
@@ -78,10 +32,23 @@ function HomeContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showGlow, setShowGlow] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const timer = setTimeout(() => {
+      setShowGlow(true);
+    }, 1800);
+    return () => clearTimeout(timer);
   }, []);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const x = (clientX / window.innerWidth - 0.5) * 35;
+    const y = (clientY / window.innerHeight - 0.5) * 35;
+    setMousePosition({ x, y });
+  };
 
 
   useEffect(() => {
@@ -115,7 +82,10 @@ function HomeContent() {
 
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-zinc-100 selection:bg-yellow-400 selection:text-black overflow-x-hidden">
+    <div 
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen bg-[#020202] text-zinc-100 selection:bg-yellow-400 selection:text-black overflow-x-hidden"
+    >
 
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
@@ -129,24 +99,29 @@ function HomeContent() {
       />
 
       {/* --- NAVIGATION --- */}
-      <nav className="absolute top-0 w-full z-[100] py-6 md:py-10">
+      <nav className="absolute top-0 w-full z-[100] pt-1 md:pt-2">
         <div className="max-w-[1400px] mx-auto px-6">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between py-0">
             <Link href="/" className="flex items-center">
-              <Image src="/splash.png" alt="Logo" width={400} height={120} className="w-auto h-16 md:h-36" priority />
+              <Image src="/splash.png" alt="Logo" width={400} height={120} className="w-auto h-16 md:h-32" priority />
             </Link>
             <div className="flex items-center gap-6">
               {!user ? (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="bg-white text-black px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest hover:bg-zinc-200 active:scale-95 transition-all shadow-lg shadow-white/10"
+                  className="bg-transparent text-white border border-white/20 px-6 py-2 rounded-full font-light text-xs uppercase tracking-widest hover:border-white/40 active:scale-95 transition-all cursor-pointer"
                 >
                   Get Started
                 </button>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link href="/dashboard" className="text-sm font-black uppercase bg-white text-black px-8 py-3 rounded-full hover:bg-zinc-200 transition-all shadow-lg shadow-white/20">Dashboard</Link>
-                  <button onClick={() => setIsSignOutModalOpen(true)} className="text-zinc-500 hover:text-white"><LogOut size={24} /></button>
+                  <Link 
+                    href="/dashboard" 
+                    className="bg-transparent text-white border border-white/20 px-6 py-2 rounded-full font-light text-xs uppercase tracking-widest hover:border-white/40 active:scale-95 transition-all cursor-pointer"
+                  >
+                    Dashboard
+                  </Link>
+                  <button onClick={() => setIsSignOutModalOpen(true)} className="text-zinc-500 hover:text-white"><LogOut size={20} /></button>
                 </div>
               )}
             </div>
@@ -155,127 +130,206 @@ function HomeContent() {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-56 pb-20 md:pt-60 overflow-hidden">
-        
-        <div className="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-2 items-center gap-10 md:gap-20">
-          <div className=" ">
-            <div className="flex items-center gap-3 mb-6 md:mb-8">
-              <span className="text-yellow-500 font-black text-xs uppercase tracking-[0.4em]"></span>
-            </div>
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-20 md:pt-36 overflow-x-hidden bg-black [--light-w-1:max(120vw,450px)] [--light-h-1:90vh] md:[--light-w-1:155vw] md:[--light-h-1:70vh] [--light-w-2:max(160vw,650px)] [--light-h-2:110vh] md:[--light-w-2:195vw] md:[--light-h-2:85vh] [--light-w-3:max(200vw,850px)] [--light-h-3:130vh] md:[--light-w-3:235vw] md:[--light-h-3:100vh]">
+        {/* Subtle Noise / Grain Overlay */}
+        <div className="absolute inset-0 noise-bg mix-blend-overlay opacity-[0.02] pointer-events-none z-[1]" />
 
-            <h1 className="text-5xl md:text-[110px] font-black leading-[0.95] tracking-tight mb-8 md:mb-10 uppercase italic pr-8">
-              TALK <br />
-              LESS. <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-white">IMPACT</span> <br />
-              MORE.
-            </h1>
+        {/* --- LUXURY CINEMATIC GLOW (x.ai/api DIRECT REPLICA) --- */}
+        {/* Container for cinematic glow, slowly fades in once showGlow is true */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: showGlow ? 1 : 0 }}
+          transition={{ duration: 6.5, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 pointer-events-none z-0"
+        >
+          {/* Layer 1 — Core Bright White Flare (Massive Spread, Responsive Mobile Sizing) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: [0.9, 1, 0.97, 1, 0.97], scale: [0.97, 1, 0.99, 1, 0.99] }}
+            transition={{ duration: 28, times: [0, 0.22, 0.45, 0.75, 1], ease: "easeInOut", repeat: Infinity }}
+            className="absolute inset-0 mix-blend-screen"
+            style={{
+              background: "radial-gradient(ellipse var(--light-w-1) var(--light-h-1) at 100% 50%, rgba(255, 255, 255, 1) 0%, rgba(255, 250, 235, 0.8) 20%, rgba(245, 225, 180, 0.4) 45%, transparent 75%)"
+            }}
+          />
 
-            <p className="text-zinc-400 text-xl md:text-2xl font-medium max-w-xl mb-12 leading-relaxed">
-              REVIAL helps you sound confident, clear, and impossible to ignore.
-            </p>
+          {/* Layer 2 — Golden Mid-Glow (Warmer Tone, Responsive Mobile Sizing) */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.65, 0.75, 0.68, 0.75, 0.68] }}
+            transition={{ duration: 32, times: [0, 0.25, 0.5, 0.75, 1], ease: "easeInOut", repeat: Infinity }}
+            className="absolute inset-0 mix-blend-screen"
+            style={{
+              background: "radial-gradient(ellipse var(--light-w-2) var(--light-h-2) at 100% 50%, rgba(210, 150, 75, 0.6) 0%, rgba(170, 115, 50, 0.3) 35%, rgba(120, 80, 30, 0.12) 60%, transparent 80%)"
+            }}
+          />
 
-            <div className="flex flex-wrap gap-6">
-              {!user && (
+          {/* Layer 3 — Deep Ambient Warm Fade (Responsive Mobile Sizing) */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.5, 0.4, 0.5, 0.4] }}
+            transition={{ duration: 36, times: [0, 0.28, 0.52, 0.78, 1], ease: "easeInOut", repeat: Infinity }}
+            className="absolute inset-0 mix-blend-screen"
+            style={{
+              background: "radial-gradient(ellipse var(--light-w-3) var(--light-h-3) at 100% 50%, rgba(90, 65, 30, 0.4) 0%, rgba(50, 35, 15, 0.15) 45%, transparent 75%)"
+            }}
+          />
+        </motion.div>
+
+        {/* Layer 4 — Darkness Preservation (Left Side Vignette Only to Let Top/Bottom Light Spill) */}
+        <div 
+          className="absolute inset-y-0 left-0 w-full pointer-events-none z-[1]" 
+          style={{ background: 'linear-gradient(to right, black 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 80%)' }}
+        />
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col justify-center my-auto -translate-y-10 md:-translate-y-16">
+          {/* Main content aligned left, leaving right side fully empty for atmospheric light */}
+          <div className="max-w-4xl flex flex-col items-start text-left pl-4 md:pl-8">
+            <motion.h1
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+              className="text-5xl md:text-[80px] font-normal leading-none tracking-[-2px] mb-12 uppercase select-none font-sans text-transparent bg-clip-text bg-gradient-to-r from-white/20 to-white"
+            >
+              TALK LESS. <br />
+              IMPACT MORE.
+            </motion.h1>
+
+            {/* Grok-style Minimal Pill Buttons */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-start sm:items-center"
+            >
+              {!user ? (
                 <button 
                   onClick={() => setIsAuthModalOpen(true)} 
-                  className="px-12 py-6 bg-white text-black font-black rounded-full flex items-center gap-3 hover:bg-zinc-200 transition-all shadow-[0_0_50px_rgba(255,255,255,0.1)] text-lg uppercase tracking-wider"
+                  className="group bg-white text-black px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.18em] hover:bg-zinc-100 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white shadow-[0_0_30px_rgba(255,255,255,0.25)] w-fit sm:w-auto"
                 >
-                  GET STARTED <MoveRight size={24} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ff5a1f] animate-pulse" />
+                  DASHBOARD <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </button>
+              ) : (
+                <Link 
+                  href="/dashboard" 
+                  className="group bg-white text-black px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.18em] hover:bg-zinc-100 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] active:scale-95 transition-all flex items-center justify-center gap-2 border border-white shadow-[0_0_30px_rgba(255,255,255,0.25)] w-fit sm:w-auto"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ff5a1f] animate-pulse" />
+                  DASHBOARD <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
               )}
-            </div>
-          </div>
 
-          {/* Hero Visual: The "Matrix" */}
-          <div className="relative flex justify-center lg:justify-end -mt-24 md:-mt-32">
-            <div className="relative w-full max-w-[550px] aspect-square">
-              {/* Glowing Background Effect */}
-              <div className="absolute inset-0 bg-yellow-500/20 blur-[120px] rounded-full animate-pulse pointer-events-none" />
-              
-              {/* Card 2 (Bottom Layer) */}
-              <div className="absolute bottom-10 left-0 w-3/5 h-3/5 bg-zinc-900/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-2xl transform -rotate-6 z-0 translate-z-0 flex items-center justify-center">
-                 <div className="w-1/2 h-[1px] bg-white/20" />
-              </div>
-
-              {/* Card 1 (Top Layer) */}
-              <div className="absolute top-0 right-0 w-4/5 h-4/5 bg-gradient-to-br from-zinc-900/80 to-black/80 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-2xl transform rotate-3 z-10 translate-z-0 overflow-hidden group">
-                <Image src="/logo.jpeg" alt="Logo" fill className="object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                <div className="absolute bottom-10 left-10 right-10">
-                  <div className="w-20 h-1 bg-yellow-500 mb-4" />
-                  <p className="text-white font-black italic uppercase tracking-widest text-xs">Vocal Analysis System</p>
-                </div>
-              </div>
-            </div>
+              <button
+                onClick={() => {
+                  const el = document.getElementById("blog-section");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                className="group bg-transparent text-white px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-full font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.18em] border border-white/20 hover:bg-white/5 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer w-fit sm:w-auto"
+              >
+                BLOG <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </button>
+            </motion.div>
           </div>
         </div>
+
+        {/* Scroll Down Indicator */}
+        <div className="absolute bottom-10 left-10 md:left-24 z-20 flex items-center gap-3">
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="text-zinc-500 hover:text-white transition-colors cursor-pointer flex flex-col items-center gap-1.5"
+            onClick={() => {
+              const el = document.getElementById("demo-section");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth" });
+              } else {
+                window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
+              }
+            }}
+          >
+            <ArrowDown size={18} />
+            <span className="text-[8px] font-mono tracking-[0.2em] text-zinc-600 uppercase">Scroll</span>
+          </motion.div>
+        </div>
+
       </section>
 
       {/* --- DEMO SECTION --- */}
-      <section className="py-32 px-6 max-w-7xl mx-auto overflow-hidden">
-        <div className="grid lg:grid-cols-2 items-center gap-20">
-          <div
-            
-            className="order-2 lg:order-1"
-          >
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 uppercase italic leading-[0.9]">
-              SEE HOW <span className="text-yellow-500 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">REVIAL</span> WORKS.
-            </h2>
-            <p className="text-zinc-400 text-xl md:text-2xl mb-12 leading-relaxed">
-              Master the art of speaking with tools designed for real-world impact. We turn your voice into your greatest asset.
-            </p>
-            <div className="space-y-6">
-              {[
-                { title: "AI Voice Auditing", desc: "Instant neural analysis of clarity, impact, and command presence." },
-                { title: "Rapid Fire Practice", desc: "Intense 6-round drills to build split-second communication confidence." },
-                { title: "Elite Dictionary", desc: "1000+ words with Hinglish meanings and daily-use context for master communication." },
-                { title: "Teleprompter", desc: "Speak with precision and professional clarity using our advanced neural teleprompter." },
-                { title: "Expert Guidance", desc: "Get real-time AI suggestions and prompts to improve your speech while you practice." }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-2.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-black text-white uppercase italic text-sm tracking-widest">{item.title}</h4>
-                    <p className="text-zinc-500 text-sm">{item.desc}</p>
+      <section id="demo-section" className="py-32 px-6 max-w-7xl mx-auto overflow-hidden">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-8 uppercase italic leading-tight">
+            SEE HOW <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">REVIAL</span> WORKS.
+          </h2>
+          <p className="text-zinc-400 text-base md:text-lg leading-relaxed mx-auto max-w-xl font-light">
+            Master the art of speaking with tools designed for real-world impact. We turn your voice into your greatest asset.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-12 lg:gap-16">
+          {[
+            { 
+              icon: <Activity className="text-zinc-400 w-5 h-5" />, 
+              title: "AI Voice Auditing",
+              desc: "Get instant neural feedback on your clarity, tone, and presence.",
+              imageSrc: "/s1.png"
+            },
+            { 
+              icon: <Flame className="text-zinc-400 w-5 h-5" />, 
+              title: "Rapid Fire Drills",
+              desc: "Intense, quick exercises to eliminate hesitation and speak with ease.",
+              imageSrc: "/s2.png"
+            },
+            { 
+              icon: <Wand2 className="text-zinc-400 w-5 h-5" />, 
+              title: "Smart Guidance & Scripting",
+              desc: "Follow advanced AI scripts and prompts tailored to your audience.",
+              imageSrc: "/s3.png"
+            }
+          ].map((item, i) => (
+            <div 
+              key={i} 
+              className="flex flex-col justify-between p-0 rounded-[2rem] bg-zinc-950/10 hover:bg-zinc-950/20 transition-all duration-500 group shadow-2xl backdrop-blur-xl"
+            >
+              <div>
+                {/* Image Container (No Borders) */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2rem]">
+                  <Image
+                    src={item.imageSrc}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  {/* High-Contrast Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent z-10" />
+
+                  {/* Info Overlay (Directly on picture, no borders) */}
+                  <div className="absolute bottom-8 left-8 right-8 z-20 flex flex-col items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white shadow-lg backdrop-blur-md transition-colors duration-300 group-hover:bg-white group-hover:text-black flex-shrink-0">
+                      {React.cloneElement(item.icon, { className: "w-5 h-5 transition-colors group-hover:text-black text-white" })}
+                    </div>
+                    <h4 className="text-xl md:text-2xl font-black text-white uppercase italic tracking-tight leading-[0.95]">{item.title}</h4>
+                    <p className="text-zinc-300 text-xs md:text-sm font-light leading-relaxed opacity-90">{item.desc}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            
-            className="flex justify-center order-1 lg:order-2"
-          >
-            <MobileDemo />
-          </div>
-        </div>
-      </section>
-
-      {/* --- STATS STRIP --- */}
-      <div className="py-10 bg-white text-black overflow-hidden relative">
-        <div className="flex whitespace-nowrap gap-20 items-center animate-marquee">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="flex items-center gap-6">
-              <span className="text-4xl font-black tracking-tighter uppercase italic">Neural Processing</span>
-              <div className="w-3 h-3 bg-black rounded-full" />
-              <span className="text-4xl font-black tracking-tighter uppercase italic">Vocal Mastery</span>
-              <div className="w-3 h-3 bg-black rounded-full" />
-              <span className="text-4xl font-black tracking-tighter uppercase italic">98% Clarity</span>
-              <div className="w-3 h-3 bg-black rounded-full" />
+              </div>
             </div>
           ))}
         </div>
-      </div>
-
+      </section>
 
 
       {/* --- SHOWCASE: REAL-TIME FEEDBACK --- */}
       <section className="py-32 px-6 bg-[#080808]">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-center">
           <div className="lg:w-1/2">
-            <h2 className="text-6xl font-black tracking-tighter mb-8 italic">THE ENGINE IN <br /><span className="text-yellow-500">ACTION.</span></h2>
-            <p className="text-zinc-400 text-xl mb-10 leading-relaxed">Stop guessing how you sound. Get the neural heat-map of your influence the moment you speak.</p>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-8 uppercase italic leading-tight">
+              VOCAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-zinc-400">AUDIT.</span>
+            </h2>
+            <p className="text-zinc-400 text-base md:text-lg mb-10 leading-relaxed max-w-lg font-light">Stop guessing how you sound. Get the neural heat-map of your influence the moment you speak.</p>
 
             <div className="space-y-6">
               {[
@@ -289,10 +343,10 @@ function HomeContent() {
                     <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
                       <div
                         
-                        className="h-full bg-yellow-500"
+                        className="h-full bg-white"
                       />
                     </div>
-                    <span className="font-black text-yellow-500">{stat.val}%</span>
+                    <span className="font-semibold text-white">{stat.val}%</span>
                   </div>
                 </div>
               ))}
@@ -300,25 +354,25 @@ function HomeContent() {
           </div>
 
           <div className="lg:w-1/2 relative">
-            <div className="w-full aspect-video bg-zinc-900 border-4 border-yellow-500 rounded-[2.5rem] p-4 relative overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+            <div className="w-full aspect-video bg-zinc-900 border border-white/10 rounded-[2.5rem] p-4 relative overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.05)]">
               <div className="absolute inset-0 bg-black opacity-20 pointer-events-none z-10" />
               
               <div className="absolute inset-0 flex items-center justify-center gap-1.5 px-10">
                 {mounted && [...Array(50)].map((_, i) => (
                   <div 
                     key={i}
-                    className="w-[3px] md:w-[4px] bg-gradient-to-t from-yellow-600 via-yellow-400 to-yellow-600 rounded-full animate-voice-flow"
+                    className="w-[3px] md:w-[4px] bg-gradient-to-t from-zinc-700 via-zinc-300 to-zinc-700 rounded-full animate-voice-flow"
                     style={{ 
                       height: `${Math.random() * 70 + 10}%`,
                       animationDelay: `${i * 0.04}s`,
-                      boxShadow: '0 0 10px rgba(234, 179, 8, 0.3)'
+                      boxShadow: '0 0 10px rgba(255, 255, 255, 0.05)'
                     }}
                   />
                 ))}
               </div>
               
               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-20">
-                <button className="w-16 h-16 bg-yellow-500 text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-2xl">
+                <button className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 hover:bg-zinc-100 transition-transform shadow-2xl cursor-pointer">
                   <Play fill="black" size={24} className="ml-1" />
                 </button>
               </div>
@@ -327,9 +381,49 @@ function HomeContent() {
         </div>
       </section>
 
+      {/* --- BLOG SECTION --- */}
+      <BlogSection />
+
       {/* --- FOOTER: THE SIGNATURE --- */}
-      <footer className="pt-40 pb-20 px-6 border-t border-white/5">
-        <div className="max-w-7xl mx-auto">
+      <footer className="relative pt-40 pb-20 px-6 border-t border-white/5 overflow-hidden bg-black">
+        {/* Layered Cinematic Bottom Glow (x.ai/api inspired smooth, highly diffused upward atmospheric light) */}
+        {/* Layer 1: Giant Broad Amber Ambient Base */}
+        <div 
+          className="absolute inset-0 pointer-events-none z-0" 
+          style={{
+            background: "radial-gradient(circle at 50% 100%, rgba(210, 150, 75, 0.08) 0%, rgba(120, 80, 30, 0.02) 60%, transparent 100%)"
+          }}
+        />
+        {/* Layer 2: Medium Golden Soft Diffused Glow */}
+        <div 
+          className="absolute inset-0 pointer-events-none z-0" 
+          style={{
+            background: "radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.04) 0%, rgba(210, 150, 75, 0.01) 70%, transparent 100%)"
+          }}
+        />
+        {/* Layer 3: Warm Elliptical Mid-Flare */}
+        <div 
+          className="absolute inset-0 pointer-events-none z-0" 
+          style={{
+            background: "radial-gradient(ellipse 80% 70% at 50% 100%, rgba(255, 235, 180, 0.06) 0%, rgba(210, 150, 75, 0.02) 80%, transparent 100%)"
+          }}
+        />
+        {/* Layer 4: Intense Bottom-Most Golden Light Spill */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-[150px] pointer-events-none z-0" 
+          style={{
+            background: "radial-gradient(ellipse 60% 100% at 50% 100%, rgba(255, 215, 0, 0.12) 0%, transparent 100%)"
+          }}
+        />
+        {/* Layer 5: Fine bottom glowing horizontal borders */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-[2px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-[#ffd700]/40 to-transparent blur-[1px]"
+        />
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-[1px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-[#ffd700]/75 to-transparent"
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-32">
             <div className="md:col-span-2">
               <Image src="/splash.png" alt="Logo" width={180} height={50} className="mb-10 opacity-80" />
@@ -353,7 +447,7 @@ function HomeContent() {
             </div>
 
             <div>
-              <h5 className="text-yellow-500 font-black uppercase text-[10px] tracking-[0.3em] mb-8">Access</h5>
+              <h5 className="text-zinc-400 font-semibold uppercase text-[10px] tracking-[0.3em] mb-8">Access</h5>
               <ul className="space-y-4 text-zinc-400 font-bold text-sm">
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -363,7 +457,7 @@ function HomeContent() {
             </div>
 
             <div>
-              <h5 className="text-yellow-500 font-black uppercase text-[10px] tracking-[0.3em] mb-8">Legal</h5>
+              <h5 className="text-zinc-400 font-semibold uppercase text-[10px] tracking-[0.3em] mb-8">Legal</h5>
               <ul className="space-y-4 text-zinc-400 font-bold text-sm">
                 <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
@@ -374,10 +468,10 @@ function HomeContent() {
 
           <div className="flex flex-col md:flex-row justify-between items-center pt-10 border-t border-white/5 gap-8">
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-              <p className="text-zinc-600 font-black text-[10px] uppercase tracking-[0.5em]">©2026 REVIAL</p>
+              <p className="text-zinc-600 font-bold text-[10px] uppercase tracking-[0.5em]">©2026 REVIAL</p>
               <div className="hidden md:block w-[1px] h-3 bg-white/10" />
-              <p className="text-yellow-500/60 font-black text-[10px] uppercase tracking-[0.5em] flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/40" />
+              <p className="text-zinc-500 font-semibold text-[10px] uppercase tracking-[0.5em] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-500/40" />
                 Founder: Ahsan Imam Khan
               </p>
               <div className="hidden md:block w-[1px] h-3 bg-white/10" />
@@ -385,14 +479,14 @@ function HomeContent() {
                 href="https://www.webiss.shop/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-zinc-500 hover:text-white font-black text-[10px] uppercase tracking-[0.5em] transition-colors"
+                className="text-zinc-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.5em] transition-colors"
               >
                 Developed by Webis Labs
               </Link>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">System Status: All Engines Nominal</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">System Status: All Engines Nominal</span>
             </div>
           </div>
         </div>
@@ -424,6 +518,9 @@ function HomeContent() {
         ::selection {
           background: #FFD700;
           color: black;
+        }
+        .noise-bg {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
       `}} />
     </div>
