@@ -38,7 +38,7 @@ function HomeContent() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showGlow, setShowGlow] = useState(false);
 
-  const showcaseBg = "linear-gradient(to bottom, #020202 0%, #082347 30%, #1e88e5 50%, #082347 70%, #020202 100%)";
+  const showcaseBg = "radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.22) 0%, rgba(14, 116, 144, 0.08) 45%, rgba(2, 2, 2, 1) 85%)";
 
   useEffect(() => {
     setMounted(true);
