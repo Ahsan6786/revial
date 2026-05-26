@@ -279,16 +279,19 @@ function HomeContent() {
             { 
               imageSrc: "/w.png", 
               title: <>Speak with <br /> Authority</>,
+              altText: "Speak with Authority",
               desc: "Instantly hear how you sound and refine your pacing, presence, and impact."
             },
             { 
               imageSrc: "/x.png", 
               title: "Quick Confidence Drills",
+              altText: "Quick Confidence Drills",
               desc: "Fast, daily exercises designed to clear hesitation and speak with ease."
             },
             { 
               imageSrc: "/y.png", 
               title: "Step-by-Step Scripting",
+              altText: "Step-by-Step Scripting",
               desc: "Follow tailored prompts to deliver your message with absolute clarity."
             }
           ].map((item, i) => (
@@ -298,7 +301,7 @@ function HomeContent() {
             >
               <Image
                 src={item.imageSrc}
-                alt={item.title}
+                alt={item.altText}
                 fill
                 sizes="(max-width: 768px) 100vw, 400px"
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
