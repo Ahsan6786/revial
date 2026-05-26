@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import BlogSection from "@/components/BlogSection";
+import { useTheme } from "next-themes";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 
 
@@ -29,11 +31,14 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const stay = searchParams.get("stay");
   const { user, loading, logout } = useAuth();
+  const { resolvedTheme } = useTheme();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showGlow, setShowGlow] = useState(false);
+
+  const showcaseBg = "linear-gradient(to bottom, #020202 0%, #082347 30%, #1e88e5 50%, #082347 70%, #020202 100%)";
 
   useEffect(() => {
     setMounted(true);
@@ -84,7 +89,7 @@ function HomeContent() {
   return (
     <div 
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen bg-[#020202] text-zinc-100 selection:bg-yellow-400 selection:text-black overflow-x-hidden"
+      className="relative min-h-screen bg-[#F5F5F5] dark:bg-[#020202] text-zinc-900 dark:text-zinc-100 selection:bg-yellow-400 selection:text-black overflow-x-hidden transition-colors duration-300"
     >
 
 
@@ -106,6 +111,7 @@ function HomeContent() {
               <Image src="/splash.png" alt="Logo" width={400} height={120} className="w-auto h-16 md:h-32" priority />
             </Link>
             <div className="flex items-center gap-6">
+              <ThemeToggle />
               {!user ? (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
@@ -178,8 +184,7 @@ function HomeContent() {
 
         {/* Layer 4 — Darkness Preservation (Left Side Vignette Only to Let Top/Bottom Light Spill) */}
         <div 
-          className="absolute inset-y-0 left-0 w-full pointer-events-none z-[1]" 
-          style={{ background: 'linear-gradient(to right, black 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 80%)' }}
+          className="absolute inset-y-0 left-0 w-full pointer-events-none z-[1] bg-gradient-to-r from-black via-black/85 via-black/40 to-transparent" 
         />
 
         <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col justify-center my-auto -translate-y-10 md:-translate-y-16">
@@ -192,7 +197,8 @@ function HomeContent() {
               className="text-5xl md:text-[80px] font-normal leading-none tracking-[-2px] mb-12 uppercase select-none font-sans text-transparent bg-clip-text bg-gradient-to-r from-white/20 to-white"
             >
               TALK LESS. <br />
-              IMPACT MORE.
+              IMPACT MORE. <br />
+              SHINE BRIGHT.
             </motion.h1>
 
             {/* Grok-style Minimal Pill Buttons */}
@@ -251,7 +257,7 @@ function HomeContent() {
             }}
           >
             <ArrowDown size={18} />
-            <span className="text-[8px] font-mono tracking-[0.2em] text-zinc-600 uppercase">Scroll</span>
+            <span className="text-[8px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Scroll</span>
           </motion.div>
         </div>
 
@@ -260,10 +266,10 @@ function HomeContent() {
       {/* --- DEMO SECTION --- */}
       <section id="demo-section" className="py-32 px-6 max-w-7xl mx-auto overflow-hidden">
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-8 uppercase italic leading-tight">
-            SEE HOW <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">REVIAL</span> WORKS.
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-8 uppercase italic leading-tight text-zinc-900 dark:text-white">
+            SEE HOW <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-400">REVIAL</span> WORKS.
           </h2>
-          <p className="text-zinc-400 text-base md:text-lg leading-relaxed mx-auto max-w-xl font-light">
+          <p className="text-zinc-600 dark:text-zinc-400 text-base md:text-lg leading-relaxed mx-auto max-w-xl font-light">
             Master the art of speaking with tools designed for real-world impact. We turn your voice into your greatest asset.
           </p>
         </div>
@@ -271,51 +277,40 @@ function HomeContent() {
         <div className="grid md:grid-cols-3 gap-12 lg:gap-16">
           {[
             { 
-              icon: <Activity className="text-zinc-400 w-5 h-5" />, 
-              title: "AI Voice Auditing",
-              desc: "Get instant neural feedback on your clarity, tone, and presence.",
-              imageSrc: "/s1.webp"
+              imageSrc: "/w.png", 
+              title: <>Speak with <br /> Authority</>,
+              desc: "Instantly hear how you sound and refine your pacing, presence, and impact."
             },
             { 
-              icon: <Flame className="text-zinc-400 w-5 h-5" />, 
-              title: "Rapid Fire Drills",
-              desc: "Intense, quick exercises to eliminate hesitation and speak with ease.",
-              imageSrc: "/s2.webp"
+              imageSrc: "/x.png", 
+              title: "Quick Confidence Drills",
+              desc: "Fast, daily exercises designed to clear hesitation and speak with ease."
             },
             { 
-              icon: <Wand2 className="text-zinc-400 w-5 h-5" />, 
-              title: "Smart Guidance & Scripting",
-              desc: "Follow advanced AI scripts and prompts tailored to your audience.",
-              imageSrc: "/s3.webp"
+              imageSrc: "/y.png", 
+              title: "Step-by-Step Scripting",
+              desc: "Follow tailored prompts to deliver your message with absolute clarity."
             }
           ].map((item, i) => (
             <div 
               key={i} 
-              className="flex flex-col justify-between p-0 rounded-[2rem] bg-zinc-950/10 hover:bg-zinc-950/20 transition-all duration-500 group shadow-2xl backdrop-blur-xl"
+              className="relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] border border-zinc-200 dark:border-white/10 shadow-2xl bg-white dark:bg-black group"
             >
-              <div>
-                {/* Image Container (No Borders) */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2rem]">
-                  <Image
-                    src={item.imageSrc}
-                    alt={item.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 400px"
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    unoptimized
-                  />
-                  {/* High-Contrast Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent z-10" />
+              <Image
+                src={item.imageSrc}
+                alt={item.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 400px"
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                unoptimized
+              />
+              {/* High-Contrast Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent z-10" />
 
-                  {/* Info Overlay (Directly on picture, no borders) */}
-                  <div className="absolute bottom-8 left-8 right-8 z-20 flex flex-col items-start gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white shadow-lg backdrop-blur-md transition-colors duration-300 group-hover:bg-white group-hover:text-black flex-shrink-0">
-                      {React.cloneElement(item.icon, { className: "w-5 h-5 transition-colors group-hover:text-black text-white" })}
-                    </div>
-                    <h4 className="text-xl md:text-2xl font-black text-white uppercase italic tracking-tight leading-[0.95]">{item.title}</h4>
-                    <p className="text-zinc-300 text-xs md:text-sm font-light leading-relaxed opacity-90">{item.desc}</p>
-                  </div>
-                </div>
+              {/* Info Overlay */}
+              <div className="absolute bottom-8 left-8 right-8 z-20 flex flex-col items-start gap-2">
+                <h4 className="text-xl md:text-2xl font-black text-white uppercase italic tracking-tight leading-[0.95]">{item.title}</h4>
+                <p className="text-zinc-300 text-xs md:text-sm font-light leading-relaxed opacity-90">{item.desc}</p>
               </div>
             </div>
           ))}
@@ -323,70 +318,30 @@ function HomeContent() {
       </section>
 
       {/* --- SHOWCASE: REAL-TIME FEEDBACK --- */}
-      <section id="vocal-audit-section" className="py-32 px-6 bg-[#080808]">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-center">
-          <div className="lg:w-1/2">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-8 uppercase italic leading-tight">
-              VOCAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-zinc-400">AUDIT.</span>
-            </h2>
-            <p className="text-zinc-400 text-base md:text-lg mb-10 leading-relaxed max-w-lg font-light">Stop guessing how you sound. Get the neural heat-map of your influence the moment you speak.</p>
-
-            <div className="space-y-6">
-              {[
-                { label: "Vocal Clarity", val: 94 },
-                { label: "Command Presence", val: 88 },
-                { label: "Emotional Resonance", val: 91 },
-              ].map((stat, i) => (
-                <div key={i} className="p-6 bg-zinc-900/50  border border-white/5 rounded-2xl flex items-center justify-between ">
-                  <span className="font-bold text-zinc-300 uppercase tracking-widest text-xs">{stat.label}</span>
-                  <div className="flex items-center gap-4">
-                    <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        
-                        className="h-full bg-white"
-                      />
-                    </div>
-                    <span className="font-semibold text-white">{stat.val}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="lg:w-1/2 relative group/wave">
-            {/* Cinematic background glow behind the card */}
-            <div className="absolute -inset-2 bg-gradient-to-r from-violet-500/20 via-pink-500/20 to-amber-500/20 rounded-[2.7rem] blur-2xl opacity-40 group-hover/wave:opacity-80 transition duration-1000" />
-            <div className="relative w-full aspect-video bg-black/90 border border-white/10 rounded-[2.5rem] p-4 overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 bg-black/40 opacity-20 pointer-events-none z-10" />
-              
-              <div className="absolute inset-0 flex items-center justify-center gap-1.5 px-10">
-                {mounted && [...Array(50)].map((_, i) => {
-                  // Generate a dynamic, premium colorful gradient across the wave
-                  const hueStart = (i * 360) / 50;
-                  const hueEnd = (hueStart + 60) % 360;
-                  return (
-                    <div 
-                      key={i}
-                      className="w-[3px] md:w-[4px] rounded-full animate-voice-flow transition-all duration-300 group-hover/wave:scale-y-110"
-                      style={{ 
-                        height: `${20 + Math.sin(i * 0.35) * 30 + Math.random() * 25}%`,
-                        animationDelay: `${i * 0.03}s`,
-                        animationDuration: `${0.6 + (i % 7) * 0.12}s`,
-                        background: `linear-gradient(to top, hsl(${hueStart}, 95%, 50%), hsl(${hueEnd}, 100%, 65%))`,
-                        boxShadow: `0 0 12px hsla(${hueStart}, 95%, 50%, 0.5)`
-                      }}
-                    />
-                  );
-                })}
-              </div>
-              
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-20">
-                <button className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 hover:bg-zinc-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.25)] hover:shadow-[0_0_40px_rgba(236,72,153,0.4)] cursor-pointer">
-                  <Play fill="black" size={24} className="ml-1" />
-                </button>
-              </div>
-            </div>
-          </div>
+      <section 
+        id="vocal-audit-section" 
+        className="w-full py-24 overflow-hidden"
+        style={{
+          background: showcaseBg
+        }}
+      >
+        <div className="text-center max-w-3xl mx-auto mb-16 px-6">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 uppercase italic leading-tight text-white">
+            OWN THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">ROOM.</span>
+          </h2>
+          <p className="text-zinc-200 text-sm md:text-base leading-relaxed mx-auto max-w-xl font-light">
+            Command attention, eliminate hesitation, and deliver your message with absolute authority.
+          </p>
+        </div>
+        <div className="relative w-full flex justify-center">
+          <Image
+            src="/ka.png"
+            alt="Vocal Audit Analysis"
+            width={1661}
+            height={947}
+            className="w-[140%] sm:w-full h-auto max-w-none flex-shrink-0"
+            priority
+          />
         </div>
       </section>
 
@@ -394,46 +349,48 @@ function HomeContent() {
       <BlogSection />
 
       {/* --- FOOTER: THE SIGNATURE --- */}
-      <footer className="relative pt-40 pb-20 px-6 overflow-hidden bg-black">
+      <footer className="relative pt-40 pb-20 px-6 overflow-hidden bg-black text-zinc-100">
         {/* Subtle top border gradient separator */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         
-        {/* Layered Cinematic Bottom Glow (x.ai/api inspired smooth, highly diffused upward atmospheric light) */}
-        {/* Layer 1: Broad Deep Indigo/Violet Base Ambient */}
-        <div 
-          className="absolute inset-0 pointer-events-none z-0" 
-          style={{
-            background: "radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 100%)"
-          }}
-        />
-        {/* Layer 2: Medium Warm Gold/Orange Diffused Glow */}
-        <div 
-          className="absolute inset-0 pointer-events-none z-0" 
-          style={{
-            background: "radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08) 0%, rgba(236, 72, 153, 0.02) 60%, transparent 100%)"
-          }}
-        />
-        {/* Layer 3: Vibrant Crimson/Rose Mid-Flare */}
-        <div 
-          className="absolute inset-0 pointer-events-none z-0" 
-          style={{
-            background: "radial-gradient(ellipse 80% 70% at 50% 100%, rgba(244, 63, 94, 0.08) 0%, rgba(139, 92, 246, 0.02) 80%, transparent 100%)"
-          }}
-        />
-        {/* Layer 4: Intense Bottom-Most Neon-Gold & Sunset Light Spill */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-[220px] pointer-events-none z-0" 
-          style={{
-            background: "radial-gradient(ellipse 60% 100% at 50% 100%, rgba(245, 158, 11, 0.18) 0%, rgba(236, 72, 153, 0.06) 50%, transparent 100%)"
-          }}
-        />
-        {/* Layer 5: Fine bottom glowing horizontal borders (Vibrant Multi-Stop Neon Gradient) */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-[2px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-violet-500/20 via-pink-500/40 via-amber-400/50 via-pink-500/40 via-violet-500/20 to-transparent blur-[1px]"
-        />
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-[1px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-violet-500/50 via-pink-500/80 via-amber-400/90 via-pink-500/80 via-violet-500/50 to-transparent"
-        />
+        {/* Layered Cinematic Bottom Glow (Golden & Champagne Sunset Atmosphere) */}
+        <>
+          {/* Layer 1: Broad Deep Gold Ambient (High opacity) */}
+          <div 
+            className="absolute inset-0 pointer-events-none z-0" 
+            style={{
+              background: "radial-gradient(circle at 50% 100%, rgba(120, 80, 30, 0.3) 0%, rgba(90, 65, 30, 0.08) 50%, transparent 100%)"
+            }}
+          />
+          {/* Layer 2: Medium Golden Diffused Glow (High opacity) */}
+          <div 
+            className="absolute inset-0 pointer-events-none z-0" 
+            style={{
+              background: "radial-gradient(ellipse 70% 80% at 50% 100%, rgba(210, 150, 75, 0.35) 0%, rgba(120, 80, 30, 0.1) 60%, transparent 100%)"
+            }}
+          />
+          {/* Layer 3: Linear bottom-to-top Gold transition */}
+          <div 
+            className="absolute inset-0 pointer-events-none z-0" 
+            style={{
+              background: "linear-gradient(to top, rgba(210, 150, 75, 0.22) 0%, rgba(245, 225, 180, 0.05) 50%, transparent 100%)"
+            }}
+          />
+          {/* Layer 4: Intense Bottom-Most Bright Champagne Highlight */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[260px] pointer-events-none z-0" 
+            style={{
+              background: "radial-gradient(ellipse 60% 100% at 50% 100%, rgba(245, 225, 180, 0.45) 0%, rgba(210, 150, 75, 0.18) 60%, transparent 100%)"
+            }}
+          />
+          {/* Layer 5: Fine bottom glowing horizontal borders (Golden/Sunset Gradient) */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[2px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-amber-500/40 via-yellow-400/60 via-amber-200/80 via-yellow-400/60 via-amber-500/40 to-transparent blur-[1px]"
+          />
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[1px] pointer-events-none z-10 bg-gradient-to-r from-transparent via-amber-500/80 via-yellow-400 via-amber-200 via-yellow-400 via-amber-500/80 to-transparent"
+          />
+        </>
 
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-32">
@@ -480,10 +437,10 @@ function HomeContent() {
 
           <div className="flex flex-col md:flex-row justify-between items-center pt-10 border-t border-white/5 gap-8">
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-              <p className="text-zinc-600 font-bold text-[10px] uppercase tracking-[0.5em]">©2026 REVIAL</p>
+              <p className="text-zinc-300 font-bold text-[10px] uppercase tracking-[0.5em]">©2026 REVIAL</p>
               <div className="hidden md:block w-[1px] h-3 bg-white/10" />
-              <p className="text-zinc-500 font-semibold text-[10px] uppercase tracking-[0.5em] flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-500/40" />
+              <p className="text-zinc-300 font-semibold text-[10px] uppercase tracking-[0.5em] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80 animate-pulse" />
                 Founder: Ahsan Imam Khan
               </p>
               <div className="hidden md:block w-[1px] h-3 bg-white/10" />
@@ -491,14 +448,14 @@ function HomeContent() {
                 href="https://www.webiss.shop/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-zinc-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.5em] transition-colors"
+                className="text-zinc-300 hover:text-white font-bold text-[10px] uppercase tracking-[0.5em] transition-colors"
               >
                 Developed by Webis Labs
               </Link>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">System Status: All Engines Nominal</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300">System Status: All Engines Nominal</span>
             </div>
           </div>
         </div>

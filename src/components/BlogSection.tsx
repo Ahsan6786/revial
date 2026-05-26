@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import { Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface BlogCardProps {
   imageSrc: string;
@@ -11,7 +11,6 @@ interface BlogCardProps {
   category: string;
   title: string;
   description: string;
-  readTime: string;
   index: number;
 }
 
@@ -21,9 +20,10 @@ const BlogCard = ({
   category,
   title,
   description,
-  readTime,
   index,
 }: BlogCardProps) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+
   const cardVariants = {
     hidden: { opacity: 0, y: 40 },
     visible: {
@@ -40,55 +40,72 @@ const BlogCard = ({
   return (
     <motion.div
       variants={cardVariants}
-      className="group relative flex flex-col justify-between h-full overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950/40 p-6 shadow-2xl backdrop-blur-xl"
+      onClick={() => setIsFlipped(!isFlipped)}
+      onMouseEnter={() => setIsFlipped(true)}
+      onMouseLeave={() => setIsFlipped(false)}
+      className="group w-full h-[440px] [perspective:1000px] cursor-pointer"
     >
-      <div>
-        {/* Image Container */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
-          <Image
-            src={imageSrc}
-            alt={title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
-            className="object-cover"
-            priority={index === 0}
-            unoptimized
-          />
-          {/* Dark Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
+      <div
+        className={cn(
+          "relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d]",
+          isFlipped && "[transform:rotateY(180deg)]"
+        )}
+      >
+        {/* --- FRONT SIDE --- */}
+        <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-[2rem] border border-zinc-200/50 dark:border-white/20 bg-zinc-950/40 overflow-hidden shadow-2xl backdrop-blur-xl">
+          {/* Card background image */}
+          <div className="absolute inset-0 w-full h-full">
+            <Image
+              src={imageSrc}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, 400px"
+              className="object-cover"
+              priority={index === 0}
+              unoptimized
+            />
+            {/* Deep gradient overlay to make the bottom text highly readable */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent z-10" />
+          </div>
 
-          {/* Minimalist White Overlay Text */}
-          <div className="absolute bottom-4 left-4 z-20">
-            <span className="inline-block rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg backdrop-blur-md">
+          {/* Upper left category badge on front */}
+          <div className="absolute top-6 left-6 z-20">
+            <span className="inline-block rounded-full border border-white/10 bg-black/50 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-lg backdrop-blur-md">
               {overlayText}
             </span>
           </div>
-        </div>
 
-        {/* Content Section */}
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-3">
-            {/* Category */}
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+          {/* Lower text section at the front */}
+          <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col gap-2">
+            <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-400">
               {category}
             </span>
+            <h3 className="text-xl font-extrabold uppercase italic leading-tight tracking-tight text-white md:text-2xl">
+              {title}
+            </h3>
+          </div>
+        </div>
 
-            {/* Read Time */}
-            <div className="flex items-center gap-1.5 text-zinc-500">
-              <Clock size={12} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">{readTime}</span>
-            </div>
+        {/* --- BACK SIDE --- */}
+        <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[2rem] border border-zinc-200 dark:border-white/20 bg-white dark:bg-zinc-950 p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between transition-colors duration-300">
+          <div className="flex flex-col gap-4 mt-2 text-left">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">
+              {category}
+            </span>
+            <h3 className="text-lg font-black uppercase italic leading-tight tracking-tight text-zinc-900 dark:text-white">
+              {title}
+            </h3>
+            {/* Split divider */}
+            <div className="w-12 h-[2px] bg-gradient-to-r from-cyan-500 to-sky-400 rounded-full" />
+            <p className="text-xs sm:text-sm leading-relaxed text-zinc-600 dark:text-zinc-300 font-medium">
+              {description}
+            </p>
           </div>
 
-          {/* Title */}
-          <h3 className="mb-3 text-xl font-extrabold uppercase italic leading-tight tracking-tight text-white md:text-2xl">
-            {title}
-          </h3>
-
-          {/* Description */}
-          <p className="text-sm leading-relaxed text-zinc-400 font-medium">
-            {description}
-          </p>
+          {/* Flip back note */}
+          <div className="flex items-center justify-end text-zinc-400 dark:text-zinc-500 border-t border-black/5 dark:border-white/5 pt-4">
+            <span className="text-[9px] font-bold tracking-widest uppercase">Click to flip</span>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -98,39 +115,36 @@ const BlogCard = ({
 export default function BlogSection() {
   const blogs = [
     {
-      imageSrc: "/s1.webp",
+      imageSrc: "/p1.png",
       overlayText: "Speak With Confidence",
       category: "Speaking Skills",
       title: "Why Great Talent Still Fails Interviews",
       description:
-        "Many people lose opportunities not because they lack skills, but because they struggle to speak confidently.",
-      readTime: "4 min read",
+        "Many brilliant candidates fall short in interviews not due to a lack of technical knowledge, but because they struggle to structure their thoughts under pressure. When hesitation creeps in and confidence wavers, even the most impressive resumes lose their impact. Mastery of vocal delivery, clear articulation, and absolute confidence are the final keys to turning your hard-earned expertise into a successful job offer.",
     },
     {
-      imageSrc: "/s2.webp",
+      imageSrc: "/p2.png",
       overlayText: "Communication Is Power",
       category: "Career Growth",
       title: "How Poor Speaking Skills Hold People Back",
       description:
-        "Fear, hesitation, and weak communication can make even talented candidates look unprepared.",
-      readTime: "5 min read",
+        "Weak verbal presence, frequent pause words, and vocal insecurity create an invisible barrier to career advancement. When you speak with hesitation, others perceive it as a lack of preparation or competence, regardless of your actual brilliance. Elevating your communication skills enables you to project leadership, assert authority in meetings, and ensure your ideas are not just heard, but respected.",
     },
     {
-      imageSrc: "/s3.webp",
+      imageSrc: "/p3.png",
       overlayText: "Your Voice Matters",
       category: "Self Improvement",
       title: "The Real Difference Between Selection And Rejection",
       description:
-        "The way you speak, present yourself, and communicate often matters more than technical knowledge.",
-      readTime: "6 min read",
+        "In highly competitive arenas, technical credentials only get you in the door; the way you communicate determines if you stay there. Selection goes to those who command attention, tell compelling stories, and engage their audience with unwavering presence. Transforming your voice from a simple tool into a powerful asset is the single most critical factor in defining your personal brand and securing success.",
     },
   ];
 
   return (
-    <section id="blog-section" className="relative overflow-hidden border-t border-white/5 bg-black py-32 px-6">
+    <section id="blog-section" className="relative overflow-hidden border-t border-black/5 dark:border-white/5 bg-[#F5F5F5] dark:bg-black py-32 px-6 transition-colors duration-300">
       {/* Luxury Background Glow Effects */}
-      <div className="pointer-events-none absolute top-1/2 left-1/4 h-[300px] w-[300px] -translate-y-1/2 rounded-full bg-white/5 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-0 right-1/4 h-[250px] w-[250px] rounded-full bg-white/5 blur-[100px]" />
+      <div className="pointer-events-none absolute top-1/2 left-1/4 h-[300px] w-[300px] -translate-y-1/2 rounded-full bg-sky-200/20 dark:bg-white/5 blur-[120px] transition-colors duration-300" />
+      <div className="pointer-events-none absolute bottom-0 right-1/4 h-[250px] w-[250px] rounded-full bg-sky-200/20 dark:bg-white/5 blur-[100px] transition-colors duration-300" />
 
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
@@ -142,8 +156,8 @@ export default function BlogSection() {
             transition={{ duration: 0.6 }}
             className="flex items-center gap-2 mb-4"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 animate-pulse" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500 animate-pulse" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">
               Inside Revial
             </span>
           </motion.div>
@@ -153,9 +167,9 @@ export default function BlogSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-3xl md:text-5xl font-extrabold uppercase italic tracking-tight text-white max-w-4xl leading-tight"
+            className="text-3xl md:text-5xl font-extrabold uppercase italic tracking-tight text-zinc-900 dark:text-white max-w-4xl leading-tight"
           >
-            Master The <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">Power Of Speaking</span>
+            Master The <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-200 dark:to-zinc-400">Power Of Speaking</span>
           </motion.h2>
 
           <motion.p
@@ -163,7 +177,7 @@ export default function BlogSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-zinc-400 text-lg md:text-xl font-medium max-w-2xl mt-6 leading-relaxed"
+            className="text-zinc-600 dark:text-zinc-400 text-lg md:text-xl font-medium max-w-2xl mt-6 leading-relaxed"
           >
             Because opportunities are often won by the way you speak.
           </motion.p>
@@ -184,7 +198,6 @@ export default function BlogSection() {
               category={blog.category}
               title={blog.title}
               description={blog.description}
-              readTime={blog.readTime}
               index={index}
             />
           ))}
