@@ -238,6 +238,29 @@ function HomeContent() {
                 BLOG <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </button>
             </motion.div>
+
+            {/* Social Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, delay: 0.5 }}
+              className="mt-6 flex items-center"
+            >
+              <Link 
+                href="https://www.instagram.com/revial01?igsh=bWFvaWhoaHF1bjYz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:scale-110 transition-transform cursor-pointer group"
+              >
+                <Image 
+                  src="/insta.png" 
+                  alt="Instagram" 
+                  width={32} 
+                  height={32} 
+                  className="opacity-70 group-hover:opacity-100 transition-opacity filter grayscale hover:grayscale-0"
+                />
+              </Link>
+            </motion.div>
           </div>
         </div>
 
