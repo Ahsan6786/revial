@@ -308,8 +308,8 @@ function HomeContent() {
                 unoptimized
               />
               {/* High-Contrast Gradient Overlay */}
-              <div className="absolute inset-0 bg-black/40 z-10 transition-colors duration-500 group-hover:bg-black/60" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
+              <div className="absolute inset-0 bg-black/10 z-10 transition-colors duration-500 group-hover:bg-black/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
 
               {/* Info Overlay */}
               <div className="absolute bottom-8 left-8 right-8 z-20 flex flex-col items-start gap-2">

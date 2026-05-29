@@ -41,9 +41,13 @@ const BlogCard = ({
     <motion.div
       variants={cardVariants}
       onClick={() => setIsFlipped(!isFlipped)}
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
-      className="group w-full h-[440px] [perspective:1000px] cursor-pointer"
+      onPointerEnter={(e) => {
+        if (e.pointerType === 'mouse') setIsFlipped(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') setIsFlipped(false);
+      }}
+      className="group w-full h-[380px] sm:h-[400px] [perspective:1000px] cursor-pointer"
     >
       <div
         className={cn(
